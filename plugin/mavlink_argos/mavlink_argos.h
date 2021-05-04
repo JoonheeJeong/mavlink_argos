@@ -34,9 +34,10 @@
 #include <argos3/core/utility/math/vector2.h>
 
 #include <ros/ros.h>
-#include <mavlink/v2.0/mavlink_argos/mavlink.h>
 #include <mavros_msgs/Mavlink.h>
-#include <mavros_msgs/mavlink_convert.h>
+
+#include <sstream>
+
 
 /*
  * All the ARGoS stuff in the 'argos' namespace.
@@ -109,7 +110,7 @@ public:
     */
    virtual void Destroy() {}
 
-   void rmsgCallback(const mavros_msgs::Mavlink &rmsg);
+//   void rmsgCallback(const mavros_msgs::Mavlink &rmsg);
 
 private:
 
@@ -166,13 +167,15 @@ private:
    /* Current target position */
    CVector3 m_cTargetPos;
 
+   ros::Publisher m_positionPub;
    ros::Publisher m_rmsgPub;
-   ros::Subscriber m_rmsgSub;
+//   ros::Subscriber m_rmsgSub;
 
 public:
   // We need only a single ROS node, although there are individual publishers
   // and subscribers for each instance of the class.
-   static ros::NodeHandle* m_nodeHandle;
+   static ros::NodeHandle* nodeHandle;
+   static std::stringstream rmsgTopic;
 };
 
 #endif

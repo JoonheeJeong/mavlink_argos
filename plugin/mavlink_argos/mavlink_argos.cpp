@@ -5,18 +5,27 @@
 /* Function definitions for logging */
 #include <argos3/core/utility/logging/argos_log.h>
 
-#include <sstream>
-
 // timestamp
 #include <string>
 #include <time.h>
 
+/*
 // for generating random real numbers
 #include <random>
 #include <limits>
 #include <cmath>
+*/
+
+#include <mavros_msgs/mavlink_convert.h>
+#ifndef MAVLINK_H
+    typedef mavlink::mavlink_message_t mavlink_message_t;
+#   include <mavlink/v2.0/mavlink_argos/mavlink.h>
+#endif 
 
 
+#include <mavlink/v2.0/mavlink_argos/mavlink.h>
+#include <iostream>
+#include "argos_bridge/Position.h"
 
 /****************************************/
 /****************************************/
@@ -28,13 +37,16 @@ ros::NodeHandle* initROS() {
   return new ros::NodeHandle();
 }
 
-ros::NodeHandle* CMavlinkArgos::m_nodeHandle = initROS();
+std::stringstream CMavlinkArgos::rmsgTopic("/rmsg");
+ros::NodeHandle* CMavlinkArgos::nodeHandle = initROS();
 
+/*
 // generating random real number
 std::random_device rd;
 std::mt19937 gen(rd());
 float upper = std::nextafter(1, std::numeric_limits<float>::max());
 std::uniform_real_distribution<> dis(0, upper); 
+*/
 
 /* Tolerance for the distance to a target point to decide to do something else */
 static const Real POSITIONING_TOLERANCE = 0.01f;
@@ -115,11 +127,14 @@ void CMavlinkArgos::Init(TConfigurationNode& t_node) {
       THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
    }
    /* Perform further initialization */
-   std::stringstream rmsgTopic;
-   rmsgTopic << "/" << GetId() << "/rmsg";
-   m_rmsgPub = m_nodeHandle->advertise<mavros_msgs::Mavlink>(rmsgTopic.str(), 1);
-   m_rmsgSub = m_nodeHandle->subscribe(rmsgTopic.str(), 1, &CMavlinkArgos::rmsgCallback, this);
-   Reset();
+
+    std::stringstream positionTopic;
+    positionTopic << "/" << GetId() << "/position";
+    m_positionPub = nodeHandle->advertise<argos_bridge::Position>(positionTopic.str(), 1);
+
+    m_rmsgPub = nodeHandle->advertise<mavros_msgs::Mavlink>(rmsgTopic.str(), 1);
+
+    Reset();
 }
 
 /****************************************/
@@ -188,18 +203,30 @@ void CMavlinkArgos::Flock() {
                0.0f));
 
    // mavlink <> ros
-   mavlink_message_t mmsg;
+   mavlink::mavlink_message_t mmsg;
    mavros_msgs::Mavlink rmsg;
-   uint8_t system_id = 1;
+   uint8_t system_id = (uint8_t) stoi(GetId().substr(6));
    uint8_t component_id = 200;
-   uint32_t id = stoi(GetId().substr(2));
+   uint32_t id = system_id;
    uint64_t timestamp = (uint64_t) time(NULL);
+   CVector3 pos_vec = m_pcPosSens->GetReading().Position;
+   float x = pos_vec[0];
+   float y = pos_vec[1];
+   float z = pos_vec[2];
+   argos_bridge::Position position;
+   position.x = x;
+   position.y = y;
+   position.z = z;
+   /*
    float estimate = dis(gen);
    uint8_t belief = (estimate >= 0.5) ? 1 : 0;
-   mavlink_msg_agent_info_pack(system_id, component_id, &mmsg, 
-           id, timestamp, estimate, belief);
+   mavlink_msg_heartbeat_pack(system_id, component_id, &mmsg, 
+           MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, 0, 0, MAV_STATE_ACTIVE);
+   */
+   mavlink_msg_agent_info_pack(system_id, component_id, &mmsg, id, timestamp, x, y, z);
    mavros_msgs::mavlink::convert(mmsg, rmsg);
    m_rmsgPub.publish(rmsg);
+   m_positionPub.publish(position);
 }
 
 /****************************************/
@@ -271,14 +298,6 @@ CVector2 CMavlinkArgos::FlockingVector() {
       /* No messages received, no interaction */
       return CVector2();
    }
-}
-
-/****************************************/
-/****************************************/
-
-void CMavlinkArgos::rmsgCallback(const mavros_msgs::Mavlink &rmsg)
-{
-    ROS_INFO("rmsg callback");
 }
 
 /****************************************/

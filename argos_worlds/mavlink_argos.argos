@@ -41,8 +41,8 @@
     <distribute>
       <position method="uniform" min="-13,-13,0" max="13,13,0" />
       <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
-      <entity quantity="2" max_trials="100">
-        <eye-bot id="eb" rab_range="10">
+      <entity quantity="5" max_trials="100">
+        <eye-bot id="eyebot" rab_range="10">
           <controller config="mavlink_argos" />
         </eye-bot>
       </entity>
