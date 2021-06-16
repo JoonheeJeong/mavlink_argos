@@ -34,9 +34,7 @@
 #include <argos3/core/utility/math/vector2.h>
 
 #include <ros/ros.h>
-#include <mavros_msgs/Mavlink.h>
-
-#include <sstream>
+#include "argos_bridge/Position.h"
 
 
 /*
@@ -110,8 +108,6 @@ public:
     */
    virtual void Destroy() {}
 
-//   void rmsgCallback(const mavros_msgs::Mavlink &rmsg);
-
 private:
 
    /*
@@ -135,6 +131,11 @@ private:
     * Used by Flock().
     */
    CVector2 FlockingVector();
+
+   /*
+    *  callback for setting up the given target position.
+    */
+   void tgtPosCallback(const argos_bridge::Position::ConstPtr &p_tgtPos);
 
 private:
 
@@ -167,15 +168,13 @@ private:
    /* Current target position */
    CVector3 m_cTargetPos;
 
-   ros::Publisher m_positionPub;
-   ros::Publisher m_rmsgPub;
-//   ros::Subscriber m_rmsgSub;
+   ros::Subscriber m_tgtPosSub;
+   ros::Publisher m_curPosPub;
 
 public:
   // We need only a single ROS node, although there are individual publishers
   // and subscribers for each instance of the class.
    static ros::NodeHandle* nodeHandle;
-   static std::stringstream rmsgTopic;
 };
 
 #endif
