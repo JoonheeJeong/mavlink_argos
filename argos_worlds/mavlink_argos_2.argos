@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<argos-configuration>
+
+  <!-- ************************* -->
+  <!-- * General configuration * -->
+  <!-- ************************* -->
+  <framework>
+    <system threads="0" />
+    <experiment length="0" ticks_per_second="10" random_seed="12345" />
+  </framework>
+  
+  <!-- *************** -->
+  <!-- * Controllers * -->
+  <!-- *************** -->
+  <controllers>
+    <!-- Eye-bot controller -->
+    <mavlink_argos_controller id="mavlink_argos" library="libmavlink_argos.so">
+      <actuators>
+        <quadrotor_position implementation="default" />
+        <range_and_bearing implementation="default" />
+      </actuators>
+      <sensors>
+        <positioning implementation="default" />
+        <range_and_bearing implementation="medium" medium="rab" show_rays="true" />
+      </sensors>
+    </mavlink_argos_controller>
+  </controllers>
+
+  <!-- *********************** -->
+  <!-- * Arena configuration * -->
+  <!-- *********************** -->
+  <arena size="30, 30, 5" center="0, 0, 1.5" positional_grid_size="30,30,5">
+  <entity>
+	<eye-bot id="eyebot_0" rab_range"10">
+		<body position="-12,-12,0" orientation="0,0,0" />
+		<controller config="mavlink_argos_2" />
+	</eye-bot>
+	<eye-bot id="eyebot_1" rab_range"10">
+		<body position="-12,12,0" orientation="0,0,0" />
+		<controller config="mavlink_argos_2" />
+	</eye-bot>
+	<eye-bot id="eyebot_2" rab_range"10">
+		<body position="12,-12,0" orientation="0,0,0" />
+		<controller config="mavlink_argos_2" />
+	</eye-bot>
+	<eye-bot id="eyebot_3" rab_range"10">
+		<body position="12,12,0" orientation="0,0,0" />
+		<controller config="mavlink_argos_2" />
+	</eye-bot>
+	<eye-bot id="eyebot_4" rab_range"10">
+		<body position="1,1,0" orientation="0,0,0" />
+		<controller config="mavlink_argos_2" />
+	</eye-bot>
+  </entity>
+  </arena>
+
+  <!-- ******************* -->
+  <!-- * Physics engines * -->
+  <!-- ******************* -->
+  <physics_engines>
+    <pointmass3d id="pm3d" iterations="10" />
+  </physics_engines>
+
+  <!-- ********* -->
+  <!-- * Media * -->
+  <!-- ********* -->
+  <media>
+    <range_and_bearing id="rab" />
+  </media>
+
+  <!-- ****************** -->
+  <!-- * Visualization * -->
+  <!-- ****************** -->
+  <visualization>
+    <qt-opengl>
+      <camera>
+        <placements>
+          <placement index="0" position="-0.0395853,0.192728,22.8506" look_at="-0.0395853,0.192728,21.8506" up="1,0,0" lens_focal_length="20" />
+        </placements>
+      </camera>
+    </qt-opengl>
+  </visualization>
+
+</argos-configuration>
