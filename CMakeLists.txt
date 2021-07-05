@@ -199,3 +199,6 @@ include_directories(
 
 add_executable(mavlink_argos_controller src/mavlink_argos_controller.cpp)
 target_link_libraries(mavlink_argos_controller ${catkin_LIBRARIES})
+
+add_executable(mavlink_argos_2_controller src/mavlink_argos_2_controller.cpp)
+target_link_libraries(mavlink_argos_2_controller ${catkin_LIBRARIES})

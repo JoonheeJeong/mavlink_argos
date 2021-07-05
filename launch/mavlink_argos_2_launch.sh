@@ -1,29 +1,42 @@
 #!/bin/bash
 
 # The number of robots.  This should match the 'quantity' value in the argos world file (e.g. argos_worlds/demo.argos).
-n=5
 
 # set initial position for each eye-bot
 
+create_bot() {
+	cat <<- CREATE_BOT
+		    <eye-bot id="ID" rab_range="4">
+		      <body position="POSITION" orientation="0,0,0" />
+		      <controller config="mavlink_argos_2" />
+		    </eye-bot>
+	CREATE_BOT
+}
+
+INIT_POS_FILE=/tmp/mavlink_argos_2_init_position.txt
+> $INIT_POS_FILE
+
 ARGOS_CONFIG_FILE="$HOME/catkin_ws/src/argos_bridge/argos_worlds/mavlink_argos_2.argos"
-echo "ARGOS_CONFIG_FILE=$ARGOS_CONFIG_FILE"
+
 if [ -e "${ARGOS_CONFIG_FILE}.bak" ]; then
 	cp "${ARGOS_CONFIG_FILE}.bak" "$ARGOS_CONFIG_FILE"
 else
 	cp "$ARGOS_CONFIG_FILE" "${ARGOS_CONFIG_FILE}.bak"
 fi
 
-INIT_POS_FILE=/tmp/mavlink_argos_2_init_position.txt
-> $INIT_POS_FILE
-
 eyebot_position=("-12,-12,0" "-12,12,0" "12,-12,0" "12,12,0" "1,1,0")
+#eyebot_position=("-12,-12,0" "12,12,0")
+#eyebot_position=("1,1,0")
+n=${#eyebot_position[*]}
 for (( i=0; i<n; i++ )); do
-	str=eyebot_${i}_position
-	echo "str=$str"
-	sed -i "s/$str/${eyebot_position[$i]}/" $ARGOS_CONFIG_FILE
-	echo "$str=${eyebot_position[$i]}" >> $INIT_POS_FILE
+	id=eyebot_${i}
+	create_bot | sed -e "s/ID/$id/" -e "s/POSITION/${eyebot_position[$i]}/" >> eyebots 
+	echo "${id}_position=${eyebot_position[$i]}" >> $INIT_POS_FILE
 done
-
+sed -n '1,/<arena/p' $ARGOS_CONFIG_FILE > temp_front 
+sed -n '\%</arena>%,$p' $ARGOS_CONFIG_FILE > temp_back 
+cat temp_front eyebots temp_back > $ARGOS_CONFIG_FILE
+rm temp_front eyebots temp_back
 
 # create a launch file for a multi-robot system 
 # by replicating a "group" tag "n" times, 
